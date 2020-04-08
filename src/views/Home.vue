@@ -1,18 +1,39 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
-  </div>
+  <v-container fill-height>
+    <v-row>
+      <v-col :md="12"><v-btn class="primary">Создать новый товар</v-btn></v-col>
+    </v-row>
+    <v-row>
+      <v-col :md="12">
+        <crud-table @delete-item="onDelete"></crud-table>
+      </v-col>
+    </v-row>
+    <confirm-delete ref="deleteDialog" />
+  </v-container>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from "@/components/HelloWorld.vue";
+import CrudTable from "../components/CrudTable";
+import { mapActions } from "vuex";
+import ConfirmDelete from "../components/ConfirmDelete";
 
 export default {
   name: "home",
   components: {
-    HelloWorld
+    ConfirmDelete,
+    CrudTable
+    // HelloWorld
+  },
+  methods: {
+    ...mapActions(["deleteItem", "updateItem", "createItem"]),
+    onDelete(item) {
+      const _this = this;
+      this.$refs.deleteDialog.show({
+        okAction: () => {
+          _this.deleteItem(item);
+        }
+      });
+    }
   }
 };
 </script>
