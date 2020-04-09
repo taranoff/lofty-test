@@ -3,11 +3,13 @@ export const crudTable = () => ({
   state: {
     rows: [],
     total: 0,
+    loading: false,
     lastFetchArgs: null
   },
   getters: {
     rows: state => state.rows,
-    total: state => state.total
+    total: state => state.total,
+    loading: state => state.loading
   },
   mutations: {
     setDisplayedPage: (state, { total, rows }) => {
@@ -16,17 +18,22 @@ export const crudTable = () => ({
     },
     saveFetchArgs: (state, obj) => {
       state.lastFetchArgs = obj;
+    },
+    setLoading: (state, value = false) => {
+      state.loading = value;
     }
   },
   actions: {
-    refreshPage: ({ dispatch, state }) => {
-      if (state.lastFetchArgs) dispatch("fetchPage", state.lastFetchArgs);
+    refreshPage: ({ dispatch, state }, setLoading) => {
+      if (state.lastFetchArgs)
+        dispatch("fetchPage", { ...state.lastFetchArgs, setLoading });
     },
     fetchPage: (
       { rootGetters, commit },
-      { start, itemsPerPage, sortBy, sortDesc }
+      { start, itemsPerPage, sortBy, sortDesc, setLoading = true }
     ) => {
       commit("saveFetchArgs", { start, itemsPerPage, sortBy, sortDesc });
+      setLoading && commit("setLoading", true);
       return new Promise(resolve => {
         setTimeout(() => {
           let data = [...rootGetters.data];
@@ -56,24 +63,39 @@ export const crudTable = () => ({
 
           resolve(result);
         }, 500);
+      }).then(() => {
+        setLoading && commit("setLoading", false);
       });
     },
     deleteItem: ({ commit, dispatch }, item) => {
-      return Promise.resolve(true).then(() => {
-        commit("deleteItem", item);
-      }).then(()=>{
-          dispatch('refreshPage');
-      });
+      return Promise.resolve(true)
+        .then(() => {
+          commit("setLoading", true);
+          commit("deleteItem", item, { root: true });
+        })
+        .then(() => {
+          dispatch("refreshPage");
+        });
     },
-    updateItem: ({ commit }, { artnumber, item }) => {
-      return Promise.resolve(item).then(() => {
-        commit("updateItem", { artnumber, item });
-      });
+    updateItem: ({ commit, dispatch }, { artnumber, item }) => {
+      return Promise.resolve(item)
+        .then(() => {
+          commit("setLoading", true);
+          commit("updateItem", { artnumber, item }, { root: true });
+        })
+        .then(() => {
+          dispatch("refreshPage");
+        });
     },
-    createItem: ({ commit }, item) => {
-      return Promise.resolve(item).then(() => {
-        commit("createItem", item);
-      });
+    createItem: ({ commit, dispatch }, item) => {
+      return Promise.resolve(item)
+        .then(() => {
+          commit("setLoading", true);
+          commit("createItem", item, { root: true });
+        })
+        .then(() => {
+          dispatch("refreshPage");
+        });
     }
   }
 });

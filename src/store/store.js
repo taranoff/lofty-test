@@ -18,7 +18,6 @@ export default new Vuex.Store({
       state.data = payload;
     },
     deleteItem: (state, item) => {
-      console.log("deleting");
       state.data.splice(
         state.data.findIndex(e => e.artnumber === item.artnumber),
         1
@@ -35,7 +34,5 @@ export default new Vuex.Store({
       state.data.push(item);
     }
   },
-  actions: {
-
-  }
+  actions: {}
 });

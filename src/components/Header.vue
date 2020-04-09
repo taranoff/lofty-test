@@ -1,11 +1,9 @@
 <template>
-  <v-app-bar color="accent">
+  <v-app-bar color="primary" app>
     <v-toolbar-title style="width: auto" class="ml-0 pl-3">
-      <router-link :to="{ name: 'home' }">
-        <h1 class="headline">
-          Lofty test
-        </h1>
-      </router-link>
+      <h1 class="headline white--text" @click="$router.push({ name: 'home' })">
+        Lofty test
+      </h1>
     </v-toolbar-title>
   </v-app-bar>
 </template>

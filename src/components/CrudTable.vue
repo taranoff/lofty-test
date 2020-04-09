@@ -5,7 +5,6 @@
     :options.sync="tableParams"
     :server-items-length="totalRows"
     :loading="tableLoading"
-    class="elevation-1"
   >
     <template v-slot:item.actions="{ item }">
       <v-icon small class="mr-2" @click="editItem(item)">
@@ -23,17 +22,19 @@
   </v-data-table>
 </template>
 <script>
-import { mapActions } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 export default {
   name: "CrudTable",
   data: () => ({
-    tableRows: [],
-    totalRows: 0,
-    tableLoading: false,
     tableParams: {}
   }),
   computed: {
+    ...mapGetters({
+      tableRows: "crudTable/rows",
+      totalRows: "crudTable/total",
+      tableLoading: "crudTable/loading"
+    }),
     tableHeaders() {
       return [
         {
@@ -56,8 +57,17 @@ export default {
       this.fetch();
     }
   },
+  mounted() {
+    if (this.$route.params.perPage && this.$route.params.pageNum)
+      this.setOptions(this.$route.params.perPage, this.$route.params.pageNum);
+    else this.fetch();
+  },
   methods: {
-    ...mapActions(["fetchPage"]),
+    ...mapActions({ fetchPage: "crudTable/fetchPage" }),
+    setOptions(perPage, pageNum) {
+      this.tableParams.page = +pageNum;
+      this.tableParams.itemsPerPage = +perPage;
+    },
     deleteItem(item) {
       this.$emit("delete-item", item, this);
     },
@@ -65,31 +75,23 @@ export default {
       this.$emit("edit-item", item);
     },
     fetch() {
-      this.tableLoading = true;
       let {
         sortBy = null,
         sortDesc = null,
         page = 1,
         itemsPerPage = 5
       } = this.tableParams;
+      console.log("tableParams", this.tableParams);
       const start = (page - 1) * itemsPerPage;
       if (!~itemsPerPage) {
         itemsPerPage = 1000;
       }
-      return this.fetchPage({ start, itemsPerPage, sortBy, sortDesc })
-        .then(response => {
-          console.log({ response });
-          this.totalRows = response.total;
-          this.tableRows = response.data;
-        })
-        .then(e => {
-          this.tableLoading = false;
-          return e;
-        });
+      this.$router.push({
+        name: "home",
+        params: { perPage: itemsPerPage, pageNum: page }
+      });
+      return this.fetchPage({ start, itemsPerPage, sortBy, sortDesc });
     }
-  },
-  mounted() {
-    this.fetch();
   }
 };
 </script>
